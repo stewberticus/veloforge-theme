@@ -1,0 +1,494 @@
+{% stylesheet %}
+.car-paint-picker {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  font-family: inherit;
+}
+.car-paint-picker__title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+.car-paint-picker__layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  align-items: start;
+}
+@media (max-width: 768px) {
+  .car-paint-picker__layout {
+    grid-template-columns: 1fr;
+  }
+}
+.product-preview__image {
+  width: 100%;
+  border-radius: 0.75rem;
+  display: block;
+}
+.vehicle-combobox {
+  margin-bottom: 1rem;
+}
+.vehicle-combobox__label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.375rem;
+}
+.vehicle-combobox__select {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  background: #fff;
+  cursor: pointer;
+  appearance: auto;
+}
+.vehicle-combobox__select:disabled {
+  background: #f3f4f6;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.paint-picker {
+  margin-top: 1.5rem;
+}
+.paint-picker__title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+.paint-picker__status {
+  font-size: 0.875rem;
+  color: #6b7280;
+  min-height: 1.25rem;
+}
+.paint-picker__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.paint-swatch {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+  outline: none;
+  flex-shrink: 0;
+}
+.paint-swatch:hover,
+.paint-swatch:focus-visible {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.15);
+}
+.paint-swatch[aria-pressed="true"] {
+  border-color: #111827;
+  transform: scale(1.15);
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.25);
+}
+.paint-picker__preview {
+  display: none;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+}
+.paint-picker__preview.is-visible {
+  display: flex;
+}
+.paint-picker__preview-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.12);
+  flex-shrink: 0;
+}
+.paint-picker__preview-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.summary-card {
+  display: none;
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+.summary-card.is-visible {
+  display: block;
+}
+.summary-card__title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.625rem;
+}
+.summary-card__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+.summary-card__swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.15);
+  flex-shrink: 0;
+  display: inline-block;
+}
+.car-paint-picker__add-to-cart {
+  width: 100%;
+  margin-top: 1.5rem;
+  padding: 0.875rem 1rem;
+  background: #111827;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  letter-spacing: 0.01em;
+}
+.car-paint-picker__add-to-cart:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+.car-paint-picker__add-to-cart:not(:disabled):hover {
+  background: #374151;
+}
+{% endstylesheet %}
+
+<section
+  class="car-paint-picker"
+  data-section-id="{{ section.id }}"
+  data-api-url="{{ section.settings.vehicle_api_url | escape }}"
+>
+  <h1 class="car-paint-picker__title">{{ product.title }}</h1>
+
+  <div class="car-paint-picker__layout">
+
+    <div class="car-paint-picker__col car-paint-picker__col--left">
+      {%- if product.featured_image -%}
+        {{ product.featured_image | image_url: width: 600 | image_tag: class: 'product-preview__image', alt: product.title }}
+      {%- endif -%}
+
+      <div class="summary-card" id="summary-card-{{ section.id }}" aria-live="polite">
+        <p class="summary-card__title">Summary</p>
+        <div class="summary-card__row">
+          <span>Vehicle:</span>
+          <span id="summary-vehicle-{{ section.id }}"></span>
+        </div>
+        <div class="summary-card__row">
+          <span>Paint:</span>
+          <span class="summary-card__swatch" id="summary-swatch-{{ section.id }}"></span>
+          <span id="summary-color-{{ section.id }}"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="car-paint-picker__col car-paint-picker__col--right">
+
+      <div class="vehicle-combobox">
+        <label class="vehicle-combobox__label" for="car-make-{{ section.id }}">Car Make</label>
+        <select
+          id="car-make-{{ section.id }}"
+          class="vehicle-combobox__select"
+          data-placeholder="Select a make"
+        >
+          <option value="">Select a make</option>
+        </select>
+      </div>
+
+      <div class="vehicle-combobox">
+        <label class="vehicle-combobox__label" for="car-year-{{ section.id }}">Year</label>
+        <select
+          id="car-year-{{ section.id }}"
+          class="vehicle-combobox__select"
+          disabled
+          data-placeholder="Select a year"
+        >
+          <option value="">Select a year</option>
+        </select>
+      </div>
+
+      <div class="vehicle-combobox">
+        <label class="vehicle-combobox__label" for="car-model-{{ section.id }}">Car Model</label>
+        <select
+          id="car-model-{{ section.id }}"
+          class="vehicle-combobox__select"
+          disabled
+          data-placeholder="Select a model"
+        >
+          <option value="">Select a model</option>
+        </select>
+      </div>
+
+      <div class="paint-picker" id="paint-picker-{{ section.id }}">
+        <p class="paint-picker__title">Select Paint Colour</p>
+        <p
+          class="paint-picker__status"
+          id="paint-status-{{ section.id }}"
+          aria-live="polite"
+        >Select a vehicle to see paint options</p>
+        <div
+          class="paint-picker__options"
+          id="paint-options-{{ section.id }}"
+          role="group"
+          aria-label="Paint colour swatches"
+        ></div>
+        <div class="paint-picker__preview" id="paint-preview-{{ section.id }}">
+          <div class="paint-picker__preview-swatch" id="preview-swatch-{{ section.id }}"></div>
+          <span class="paint-picker__preview-name" id="preview-name-{{ section.id }}"></span>
+        </div>
+      </div>
+
+      <form id="car-paint-form-{{ section.id }}">
+        <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+        <input type="hidden" name="quantity" value="1">
+        <input type="hidden" id="prop-make-{{ section.id }}" name="properties[Make]" value="">
+        <input type="hidden" id="prop-year-{{ section.id }}" name="properties[Year]" value="">
+        <input type="hidden" id="prop-model-{{ section.id }}" name="properties[Model]" value="">
+        <input type="hidden" id="prop-color-{{ section.id }}" name="properties[Color Name]" value="">
+        <input type="hidden" id="prop-code-{{ section.id }}" name="properties[Paint Code]" value="">
+        <input type="hidden" id="prop-hex-{{ section.id }}" name="properties[_Hex]" value="">
+        <button
+          type="submit"
+          class="car-paint-picker__add-to-cart"
+          id="add-to-cart-{{ section.id }}"
+          disabled
+          aria-disabled="true"
+        >
+          Add to Cart
+        </button>
+      </form>
+
+    </div>
+  </div>
+</section>
+
+{% javascript %}
+(function () {
+  document.querySelectorAll('.car-paint-picker').forEach(function (section) {
+    var sectionId = section.dataset.sectionId;
+    var apiUrl = (section.dataset.apiUrl || '').replace(/\/$/, '');
+
+    var makeSelect  = document.getElementById('car-make-'      + sectionId);
+    var yearSelect  = document.getElementById('car-year-'      + sectionId);
+    var modelSelect = document.getElementById('car-model-'     + sectionId);
+    var paintOptions  = document.getElementById('paint-options-'  + sectionId);
+    var paintStatus   = document.getElementById('paint-status-'   + sectionId);
+    var paintPreview  = document.getElementById('paint-preview-'  + sectionId);
+    var previewSwatch = document.getElementById('preview-swatch-' + sectionId);
+    var previewName   = document.getElementById('preview-name-'   + sectionId);
+    var summaryCard   = document.getElementById('summary-card-'   + sectionId);
+    var summaryVehicle = document.getElementById('summary-vehicle-' + sectionId);
+    var summarySwatch  = document.getElementById('summary-swatch-'  + sectionId);
+    var summaryColor   = document.getElementById('summary-color-'   + sectionId);
+    var propMake  = document.getElementById('prop-make-'  + sectionId);
+    var propYear  = document.getElementById('prop-year-'  + sectionId);
+    var propModel = document.getElementById('prop-model-' + sectionId);
+    var propColor = document.getElementById('prop-color-' + sectionId);
+    var propCode  = document.getElementById('prop-code-'  + sectionId);
+    var propHex   = document.getElementById('prop-hex-'   + sectionId);
+    var addToCartBtn = document.getElementById('add-to-cart-'      + sectionId);
+    var form         = document.getElementById('car-paint-form-'   + sectionId);
+
+    var selectedPaint = null;
+
+    function resetSelect(el) {
+      var placeholder = el.dataset.placeholder || '';
+      el.innerHTML = '<option value="">' + placeholder + '</option>';
+      el.disabled = true;
+    }
+
+    function populateSelect(el, items) {
+      var placeholder = el.dataset.placeholder || '';
+      el.innerHTML = '<option value="">' + placeholder + '</option>';
+      items.forEach(function (item) {
+        var opt = document.createElement('option');
+        opt.value = typeof item === 'object' ? (item.value || item.id || item.name) : item;
+        opt.textContent = typeof item === 'object' ? (item.label || item.name || item.value) : item;
+        el.appendChild(opt);
+      });
+      el.disabled = false;
+    }
+
+    function checkSubmitReady() {
+      var ready = !!(makeSelect.value && yearSelect.value && modelSelect.value && selectedPaint);
+      addToCartBtn.disabled = !ready;
+      addToCartBtn.setAttribute('aria-disabled', String(!ready));
+    }
+
+    function showPaintPreview(paint) {
+      previewSwatch.style.backgroundColor = paint.hex;
+      previewName.textContent = paint.name;
+      paintPreview.classList.add('is-visible');
+    }
+
+    function updateSummary() {
+      if (makeSelect.value && yearSelect.value && modelSelect.value) {
+        summaryVehicle.textContent =
+          makeSelect.options[makeSelect.selectedIndex].text + ' ' +
+          modelSelect.options[modelSelect.selectedIndex].text + ' (' + yearSelect.value + ')';
+        if (selectedPaint) {
+          summarySwatch.style.backgroundColor = selectedPaint.hex;
+          summaryColor.textContent = selectedPaint.name;
+        }
+        summaryCard.classList.add('is-visible');
+      }
+    }
+
+    fetch(apiUrl + '/makes')
+      .then(function (r) { return r.json(); })
+      .then(function (data) { populateSelect(makeSelect, data); })
+      .catch(function () { paintStatus.textContent = 'Could not load vehicle data.'; });
+
+    makeSelect.addEventListener('change', function () {
+      resetSelect(yearSelect);
+      resetSelect(modelSelect);
+      paintOptions.innerHTML = '';
+      selectedPaint = null;
+      paintPreview.classList.remove('is-visible');
+      summaryCard.classList.remove('is-visible');
+      paintStatus.textContent = 'Select a vehicle to see paint options';
+      checkSubmitReady();
+      if (!this.value) return;
+      propMake.value = this.value;
+      fetch(apiUrl + '/years?make=' + encodeURIComponent(this.value))
+        .then(function (r) { return r.json(); })
+        .then(function (data) { populateSelect(yearSelect, data); })
+        .catch(function () { paintStatus.textContent = 'Could not load years.'; });
+    });
+
+    yearSelect.addEventListener('change', function () {
+      resetSelect(modelSelect);
+      paintOptions.innerHTML = '';
+      selectedPaint = null;
+      paintPreview.classList.remove('is-visible');
+      summaryCard.classList.remove('is-visible');
+      paintStatus.textContent = 'Select a vehicle to see paint options';
+      checkSubmitReady();
+      if (!this.value) return;
+      propYear.value = this.value;
+      fetch(
+        apiUrl + '/models?make=' + encodeURIComponent(makeSelect.value) +
+        '&year=' + encodeURIComponent(this.value)
+      )
+        .then(function (r) { return r.json(); })
+        .then(function (data) { populateSelect(modelSelect, data); })
+        .catch(function () { paintStatus.textContent = 'Could not load models.'; });
+    });
+
+    modelSelect.addEventListener('change', function () {
+      paintOptions.innerHTML = '';
+      selectedPaint = null;
+      paintPreview.classList.remove('is-visible');
+      summaryCard.classList.remove('is-visible');
+      checkSubmitReady();
+      if (!this.value) return;
+      propModel.value = this.value;
+      paintStatus.textContent = 'Loading paint options\u2026';
+      fetch(
+        apiUrl + '/colors?make='  + encodeURIComponent(makeSelect.value) +
+        '&year='  + encodeURIComponent(yearSelect.value) +
+        '&model=' + encodeURIComponent(this.value)
+      )
+        .then(function (r) { return r.json(); })
+        .then(function (paints) {
+          paintStatus.textContent = paints.length === 0 ? 'No paint options found.' : '';
+          paints.forEach(function (paint) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'paint-swatch';
+            btn.style.backgroundColor = paint.hex;
+            btn.setAttribute('title', paint.name);
+            btn.setAttribute('aria-label', paint.name);
+            btn.setAttribute('aria-pressed', 'false');
+            btn.addEventListener('click', function () {
+              paintOptions.querySelectorAll('.paint-swatch').forEach(function (s) {
+                s.setAttribute('aria-pressed', 'false');
+              });
+              btn.setAttribute('aria-pressed', 'true');
+              selectedPaint = paint;
+              propColor.value = paint.name;
+              propCode.value  = paint.code || '';
+              propHex.value   = paint.hex;
+              showPaintPreview(paint);
+              updateSummary();
+              checkSubmitReady();
+            });
+            paintOptions.appendChild(btn);
+          });
+        })
+        .catch(function () { paintStatus.textContent = 'Could not load paint options.'; });
+    });
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!selectedPaint || !makeSelect.value || !yearSelect.value || !modelSelect.value) return;
+      addToCartBtn.disabled = true;
+      addToCartBtn.textContent = 'Adding\u2026';
+      fetch('/cart/add.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: [{
+            id: parseInt(form.querySelector('[name="id"]').value, 10),
+            quantity: 1,
+            properties: {
+              'Make':        makeSelect.options[makeSelect.selectedIndex].text,
+              'Year':        yearSelect.value,
+              'Model':       modelSelect.options[modelSelect.selectedIndex].text,
+              'Color Name':  selectedPaint.name,
+              'Paint Code':  selectedPaint.code || '',
+              '_Hex':        selectedPaint.hex
+            }
+          }]
+        })
+      })
+        .then(function (r) {
+          if (!r.ok) throw new Error('Cart error');
+          return r.json();
+        })
+        .then(function () { window.location.href = '/cart'; })
+        .catch(function () {
+          addToCartBtn.disabled = false;
+          addToCartBtn.textContent = 'Add to Cart';
+          alert('Could not add to cart. Please try again.');
+        });
+    });
+  });
+}());
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Car Paint Picker",
+  "tag": "section",
+  "class": "car-paint-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "vehicle_api_url",
+      "label": "Vehicle API Base URL",
+      "default": "https://your-vehicle-api-url.com",
+      "info": "The base URL for your vehicle make, model, year and colour API."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Car Paint Picker"
+    }
+  ]
+}
+{% endschema %}
